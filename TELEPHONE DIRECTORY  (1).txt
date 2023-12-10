@@ -1,0 +1,223 @@
+import mysql.connector
+mydb=mysql.connector.connect(host='localhost',user='root',password='Ambher1512@')
+cursor=mydb.cursor()
+cursor.execute("create database IF NOT EXISTS tele;")
+cursor.execute("use tele;")
+cursor.execute("create table if not exists contacts(name varchar(40) NOT NULL PRIMARY KEY,number int NOT NULL,email varchar(50) DEFAULT NULL );")
+
+print('''
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+===============================================================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  
+                   ▄█████████████████████           
+                  ██                    ▐█            
+                ▄▄██▄                   ▐█            
+                ▀▀██▀▀   ▄▄             ▐█           
+                  ██   ██▀▀██▄          ██            
+                  ██  ▐█    ██          ██           
+                  ██   ██  ██           ▐█           
+                  ██    ██▄ ██▄▄████    ▐█           
+                  ██     ▀██▄      ▀█▌  ▐█           
+                  ██        ▀██▄▄▄▄██▀  ▐█           
+                ▄▄██▄▄         ▀▀▀▀▀    ▐█           
+                ▀▀██▀                   ▐█           
+                  ██                    ▐█           
+                   ▀█████████████████████      
+ ''')
+print('''
+               =============================
+                    TELEPHONE DIRECTORY
+               =============================''')
+print()
+print('''
+        __________________________________________ 
+
+        --- WELCOME TO THE TELEPHONE DIRECTORY ---
+        __________________________________________ ''')
+
+def print_menu():
+    print(''' 
+            _________________________________
+            █                                █    
+            █  [1] Print Phone Numbers       █  
+            █  [2] Add a Phone Number        █
+            █  [3] Remove a Phone Number     █
+            █  [4] Lookup by Contact Name    █ 
+            █  [5] Modify existing contact   █
+            █  [6] Search By Initials        █
+            █  [7] Quit                      █
+            █________________________________█
+             
+
+''')
+def numcheck(number):
+    cursor.execute("select * from contacts where number={}".format(number))
+    temp2=cursor.fetchall()
+    numcheck=0
+    if temp2!=[]:
+        numcheck=1
+    return numcheck
+
+def namecheck(name):
+    cursor.execute("select * from contacts where name='{}'".format(name))
+    temp1=cursor.fetchall()
+    namecheck=0
+    if temp1!=[]:
+        namecheck=1
+    return namecheck
+
+def check(name,number):
+    numcheck1=numcheck(number)
+    namecheck1=namecheck(name)
+    fin=numcheck1+namecheck1
+    if fin==1 or fin==2:
+        return 0
+    elif fin==0:
+        return 1
+
+
+numbers = {}
+menu_choice = 0
+print_menu()
+while menu_choice != 7:
+    menu_choice = int(input('''
+                _______________________
+                
+                Type in a number (1-7): 
+                _______________________
+
+
+                          '''))
+    if menu_choice == 1:
+        print('''              ===========================''')
+        cursor.execute('select * from contacts;')
+        data=cursor.fetchall()
+        print("               ---TELEPHONE NUMBERS:---")
+        print('''              ===========================''')
+        print('             -----------------------------')
+        j=1
+        for i in data:
+            print("\t\t     CONTACT NO:{}".format(j))
+            print("\t      Name: ", i[0], "\n\t      Number:", i[1],'\n\t      Email:',i[2])
+            print('             -----------------------------')
+            j+=1
+        print('\n\n')
+        print('===============================================================')
+        print_menu()
+
+    elif menu_choice == 2:
+        print('''
+              ============================''',end='')
+        print('''
+              ---------ADD ENTRIES--------''',end='')
+        print('''
+              ============================''')
+        n=int(input('''
+        enter number of entries to be inserted:'''))
+        for i in range(n):
+            name = input("\t\t Enter Name: ")
+            number = int(input("\t\t Enter Number: "))
+            temp1=check(name,number)
+            if temp1==0:
+                print('\n SORRY THE DATA ENTERED IS ALREADY EXISTING IN THE DIRECTORY')
+            elif temp1==1:
+                email=input('\t\t Enter Email id:')
+                cursor.execute("insert into contacts (name,number,email) values ('%s',%d,'%s');"%(name,number,email))
+                cursor.execute("commit;")
+                if n==1:
+                    print('\n\n\t         ENTRY SUCCESSFUL!')
+        print('===============================================================')
+        print_menu()
+        
+    elif menu_choice == 3:
+        print('''
+              ============================''',end='')
+        print('''
+              -----------DELETE-----------''',end='')
+        print('''
+              ============================''')
+        name=input('''
+          enter name of contact to be deleted:''')
+        temp1=namecheck(name)
+        if temp1==1:
+            cursor.execute("delete from contacts where name='{}'".format(name))
+            print('''\t\t    DELETION SUCCESSFUL''')
+        elif temp1==0:
+            print('''
+                Sorry NO such entry exists!''')
+        print('\n\n===============================================================')
+        print_menu()
+    elif menu_choice == 4:
+        print('''
+              ============================
+              ----------LOOK UP----------- 
+              ============================
+        ''')
+        print("\t\tEnter Name to look for:",end='\n')
+        name = input("\t\tName: ")
+        temp=namecheck(name)
+        if temp==0:
+            print('\t\tTHE NUMBER DO NOT EXIST!')
+            print_menu()
+        elif temp==1:
+            cursor.execute("select * from contacts where name='%s';"%name)
+            temp1=cursor.fetchall()
+            for k in temp1:
+                print('\n\n             -----------------------------\n\t\t  NAME:',k[0],'\n\t\t  NUMBER:',k[1],'\n\t\t  EMAIL:',k[2])
+                print('             -----------------------------')
+        print('\n===============================================================')
+        print_menu()
+    elif menu_choice == 5:
+        print('''
+              ============================
+              ----------MODIFY------------ 
+              ============================
+        ''')
+        name=input('\t      Enter name to modify:')
+        temp=namecheck(name)
+        if temp==0:
+            print('\t\t THE NUMBER DO NOT EXIST')
+            print_menu()
+        if temp==1:
+            newnum=int(input('\n\t\t  Enter NEW NUMBER:'))
+            newem=input('\t\t  Enter NEW EMAIL:')
+            cursor.execute("update contacts set name='{}',number={},email='{}' where name='{}';".format(name,newnum,newem,name))
+            print('\n\n\t\t   ENTRY SUCCESSFUL!\n\n')
+        print('===============================================================')
+        print_menu()
+    elif menu_choice==6:
+        print('''
+              ============================
+              -----SEARCH BY INITIALS-----
+              ============================
+        ''')
+        initials=input('\t  enter the initials of contact name:')
+        cursor.execute("select * from contacts where name like '{}%';".format(initials))
+        data=cursor.fetchall()
+        temp=1
+        if data!=[]:
+            for i in data:
+                print("\t\t     CONTACT NO:{}".format(temp))
+                print('             -----------------------------\n\t\t  NAME:',i[0],'\n\t\t  NUMBER:',i[1],'\n\t\t  EMAIL:',i[2])
+                print('             -----------------------------\n\n')
+
+                temp+=1
+        elif data==[]:
+            print('sorry such name do not exist')
+        print('===============================================================')
+        print_menu()
+        
+    elif menu_choice == 7:
+        print('''
+    ----------------------------------------------------
+
+    ===   THANKS FOR USING OUR TELEPHONE DIRECTORY   ===
+                    HAVE A GOOD DAY!
+                 
+    ----------------------------------------------------
+''')
+    else:
+        print('\t\t   INVALID INPUT!!')
+        print_menu()
